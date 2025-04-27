@@ -1,119 +1,143 @@
-pub const fn operator_not(a: bool) -> bool {
-    !a
-}
-
-pub const fn operator_and(a: bool, b: bool) -> bool {
-    a && b
-}
-
-pub const fn operator_or(a: bool, b: bool) -> bool {
-    a || b
-}
-pub const fn operator_xor(a: bool, b: bool) -> bool {
-    a ^ b
-}
-
-pub const fn operator_nand(a: bool, b: bool) -> bool {
-    operator_not(operator_and(a, b))
-}
-pub const fn operator_nor(a: bool, b: bool) -> bool {
-    operator_not(operator_or(a, b))
-}
-
+/// Wire in circuit.
 #[derive(Default)]
 pub struct Wire {
     potential: bool,
 }
 impl Wire {
+    /// Create a new wire.
     pub fn new(potential: bool) -> Self {
         Self { potential }
     }
-
+    /// Get the output of the wire.
     pub fn output(&self) -> bool {
         self.potential
     }
-
+    /// Set the input of the wire.
     pub fn input(&mut self, potential: bool) {
         self.potential = potential;
     }
 }
+
+/// Operator not in circuit.
+pub const fn operator_not(a: bool) -> bool {
+    !a
+}
+
+/// Operator and in circuit.
+pub const fn operator_and(a: bool, b: bool) -> bool {
+    a && b
+}
+
+/// Operator or in circuit.
+pub const fn operator_or(a: bool, b: bool) -> bool {
+    a || b
+}
+/// Operator xor in circuit.
+pub const fn operator_xor(a: bool, b: bool) -> bool {
+    a ^ b
+}
+/// Operator nand in circuit.
+pub const fn operator_nand(a: bool, b: bool) -> bool {
+    operator_not(operator_and(a, b))
+}
+
+/// Operator nor in circuit.
+pub const fn operator_nor(a: bool, b: bool) -> bool {
+    operator_not(operator_or(a, b))
+}
+
+/// AND gate in circuit.
 #[derive(Default)]
 pub struct ANDGate {
     wire: Wire,
 }
 impl ANDGate {
+    /// Get the output of the gate.
     pub fn output(&self) -> bool {
         self.wire.output()
     }
-
+    /// Set the input of the gate.
     pub fn input(&mut self, a: bool, b: bool) {
         self.wire.input(operator_and(a, b));
     }
 }
 
+/// OR gate in circuit.
 #[derive(Default)]
 pub struct ORGate {
     wire: Wire,
 }
 impl ORGate {
+    /// Get the output of the gate.
     pub fn output(&self) -> bool {
         self.wire.output()
     }
-
+    /// Set the input of the gate.
     pub fn input(&mut self, a: bool, b: bool) {
         self.wire.input(operator_or(a, b));
     }
 }
 
+/// NOT gate in circuit.
 #[derive(Default)]
 pub struct NOTGate {
     wire: Wire,
 }
 impl NOTGate {
+    /// Get the output of the gate.
     pub fn output(&self) -> bool {
         self.wire.output()
     }
 
+    /// Set the input of the gate.
     pub fn input(&mut self, a: bool) {
         self.wire.input(operator_not(a));
     }
 }
 
+/// XOR gate in circuit.
 #[derive(Default)]
 pub struct XORGate {
     wire: Wire,
 }
 impl XORGate {
+    /// Get the output of the gate.
     pub fn output(&self) -> bool {
         self.wire.output()
     }
 
+    /// Set the input of the gate.
     pub fn input(&mut self, a: bool, b: bool) {
         self.wire.input(operator_xor(a, b));
     }
 }
-
+/// NAND gate in circuit.
 #[derive(Default)]
 pub struct NANDGate {
     wire: Wire,
 }
 impl NANDGate {
+    /// Get the output of the gate.
     pub fn output(&self) -> bool {
         self.wire.output()
     }
+    /// Set the input of the gate.
     pub fn input(&mut self, a: bool, b: bool) {
         self.wire.input(operator_nand(a, b));
     }
 }
 
+/// NOR gate in circuit.
 #[derive(Default)]
 pub struct NORGate {
     wire: Wire,
 }
 impl NORGate {
+    /// Get the output of the gate.
     pub fn output(&self) -> bool {
         self.wire.output()
     }
+    /// Set the input of the gate.
     pub fn input(&mut self, a: bool, b: bool) {
         self.wire.input(operator_nor(a, b));
     }
