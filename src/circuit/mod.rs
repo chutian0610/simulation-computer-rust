@@ -1,7 +1,17 @@
+use std::ops::Deref;
+
 /// Wire in circuit.
 #[derive(Default)]
 pub struct Wire {
     potential: bool,
+}
+
+impl Deref for Wire {
+    type Target = bool;
+
+    fn deref(&self) -> &Self::Target {
+        &self.potential
+    }
 }
 impl Wire {
     /// Create a new wire.
