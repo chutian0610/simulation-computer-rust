@@ -47,10 +47,19 @@ mod tests {
     fn test_and_gate_3() {
         let mut and_gate_3 = ANDGate3::default();
 
-        and_gate_3.set_pin_input(0, &true);
-        and_gate_3.set_pin_input(1, &true);
-        and_gate_3.set_pin_input(2, &true);
+        let vec = vec![true, true, true];
+        and_gate_3.input(&vec);
         and_gate_3.update_state();
-        assert_eq!(and_gate_3.get_pin_output(0), true);
+        assert_eq!(and_gate_3.output(), vec![true]);
+
+        let vec = vec![true, false, true];
+        and_gate_3.input(&vec);
+        and_gate_3.update_state();
+        assert_eq!(and_gate_3.output(), vec![false]);
+
+        let vec = vec![false, false, false];
+        and_gate_3.input(&vec);
+        and_gate_3.update_state();
+        assert_eq!(and_gate_3.output(), vec![false]);
     }
 }
