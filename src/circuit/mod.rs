@@ -1,4 +1,3 @@
-use std::ops::Deref;
 
 pub type Potential = bool;
 
@@ -8,13 +7,6 @@ pub struct Wire {
     potential: Potential,
 }
 
-impl Deref for Wire {
-    type Target = Potential;
-
-    fn deref(&self) -> &Self::Target {
-        &self.potential
-    }
-}
 impl Wire {
     /// Create a new wire.
     pub fn new(potential: Potential) -> Self {
@@ -59,7 +51,7 @@ pub fn operator_nor(a: &Potential, b: &Potential) -> Potential {
 }
 
 /// AND gate in circuit.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct ANDGate {
     wire: Wire,
 }
@@ -167,6 +159,20 @@ mod tests {
         assert_eq!(wire.output(), true);
         wire.input(&false);
         assert_eq!(wire.output(), false);
+    }
+
+    #[test]
+    fn test_wire_copy() {
+        let mut wire1: Wire = Wire::default();
+        assert_eq!(wire1.output(), false);
+        // println!("地址1: {:p}", &wire1);
+        let wire2 = wire1;
+        assert_eq!(wire2.output(), false);
+        // println!("地址2: {:p}", &wire2);
+        wire1.input(&true);
+        // println!("地址1: {:p}", &wire1);
+        assert_eq!(wire1.output(), true);
+        assert_eq!(wire2.output(), false);
     }
 
     #[test]
