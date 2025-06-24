@@ -10,7 +10,7 @@ pub trait Component {
     fn set_pin_input(&mut self, position: usize, value: &Potential);
     /// update the state of the component
     fn update_state(&mut self);
-    /// get the number of pins of the component
+    /// get the number of pins of the component( input, output)
     fn get_pin_count(&self) -> (usize, usize);
 
     /// batch input of the component

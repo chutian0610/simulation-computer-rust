@@ -158,7 +158,7 @@ impl NORGate {
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    use rstest::rstest;
     #[test]
     fn test_wire() {
         let mut wire = Wire::default();
@@ -168,87 +168,104 @@ mod tests {
         wire.input(&false);
         assert_eq!(wire.output(), false);
     }
+
     #[test]
-    fn test_and_gate() {
+    fn test_not_gate_default() {
+        let not_gate = NOTGate::default();
+        assert_eq!(not_gate.output(), false);
+    }
+
+    #[test]
+    fn test_and_gate_default() {
+        let and_gate = ANDGate::default();
+        assert_eq!(and_gate.output(), false);
+    }
+
+    #[test]
+    fn test_or_gate_default() {
+        let or_gate = ORGate::default();
+        assert_eq!(or_gate.output(), false);
+    }
+
+    #[test]
+    fn test_xor_gate_default() {
+        let xor_gate = XORGate::default();
+        assert_eq!(xor_gate.output(), false);
+    }
+
+    #[rstest]
+    #[case(true, true, true)]
+    #[case(true, false, false)]
+    #[case(false, true, false)]
+    #[case(false, false, false)]
+    fn test_and_gate_with_truth_table(#[case] a: bool, #[case] b: bool, #[case] c: bool) {
         let mut and_gate = ANDGate::default();
-        assert_eq!(and_gate.output(), false);
-
-        and_gate.input(&true, &true);
-        assert_eq!(and_gate.output(), true);
-        and_gate.input(&true, &false);
-        assert_eq!(and_gate.output(), false);
-        and_gate.input(&false, &true);
-        assert_eq!(and_gate.output(), false);
-        and_gate.input(&false, &false);
-        assert_eq!(and_gate.output(), false);
+        and_gate.input(&a, &b);
+        assert_eq!(and_gate.output(), c);
     }
 
-    #[test]
-    fn test_or_gate() {
+    #[rstest]
+    #[case(true, true, true)]
+    #[case(true, false, true)]
+    #[case(false, true, true)]
+    #[case(false, false, false)]
+    fn test_or_gate_with_truth_table(#[case] a: bool, #[case] b: bool, #[case] c: bool) {
         let mut or_gate = ORGate::default();
-        assert_eq!(or_gate.output(), false);
-        or_gate.input(&true, &true);
-        assert_eq!(or_gate.output(), true);
-        or_gate.input(&true, &false);
-        assert_eq!(or_gate.output(), true);
-        or_gate.input(&false, &true);
-        assert_eq!(or_gate.output(), true);
-        or_gate.input(&false, &false);
-        assert_eq!(or_gate.output(), false);
+        or_gate.input(&a, &b);
+        assert_eq!(or_gate.output(), c);
     }
 
-    #[test]
-    fn test_not_gate() {
+    #[rstest]
+    #[case(true, false)]
+    #[case(false, true)]
+    fn test_not_gate_with_truth_table(#[case] a: bool, #[case] c: bool) {
         let mut not_gate = NOTGate::default();
-        assert_eq!(not_gate.output(), false);
-        not_gate.input(&true);
-        assert_eq!(not_gate.output(), false);
-        not_gate.input(&false);
-        assert_eq!(not_gate.output(), true);
+        not_gate.input(&a);
+        assert_eq!(not_gate.output(), c);
     }
 
-    #[test]
-    fn test_xor_gate() {
+    #[rstest]
+    #[case(true, true, false)]
+    #[case(true, false, true)]
+    #[case(false, true, true)]
+    #[case(false, false, false)]
+    fn test_xor_gate_with_truth_table(#[case] a: bool, #[case] b: bool, #[case] c: bool) {
         let mut xor_gate = XORGate::default();
-        assert_eq!(xor_gate.output(), false);
-
-        xor_gate.input(&true, &true);
-        assert_eq!(xor_gate.output(), false);
-        xor_gate.input(&true, &false);
-        assert_eq!(xor_gate.output(), true);
-        xor_gate.input(&false, &true);
-        assert_eq!(xor_gate.output(), true);
-        xor_gate.input(&false, &false);
-        assert_eq!(xor_gate.output(), false);
+        xor_gate.input(&a, &b);
+        assert_eq!(xor_gate.output(), c);
     }
 
     #[test]
-    fn test_nand_gate() {
+    fn test_nand_gate_default() {
+        let nand_gate = NANDGate::default();
+        assert_eq!(nand_gate.output(), false);
+    }
+
+    #[rstest]
+    #[case(true, true, false)]
+    #[case(true, false, true)]
+    #[case(false, true, true)]
+    #[case(false, false, true)]
+    fn test_nand_gate_with_truth_table(#[case] a: bool, #[case] b: bool, #[case] c: bool) {
         let mut nand_gate = NANDGate::default();
-        assert_eq!(nand_gate.output(), false);
-
-        nand_gate.input(&true, &true);
-        assert_eq!(nand_gate.output(), false);
-        nand_gate.input(&true, &false);
-        assert_eq!(nand_gate.output(), true);
-        nand_gate.input(&false, &true);
-        assert_eq!(nand_gate.output(), true);
-        nand_gate.input(&false, &false);
-        assert_eq!(nand_gate.output(), true);
+        nand_gate.input(&a, &b);
+        assert_eq!(nand_gate.output(), c);
     }
 
     #[test]
-    fn test_nor_gate() {
-        let mut nor_gate = NORGate::default();
+    fn test_nor_gate_default() {
+        let nor_gate = NORGate::default();
         assert_eq!(nor_gate.output(), false);
+    }
 
-        nor_gate.input(&true, &true);
-        assert_eq!(nor_gate.output(), false);
-        nor_gate.input(&true, &false);
-        assert_eq!(nor_gate.output(), false);
-        nor_gate.input(&false, &true);
-        assert_eq!(nor_gate.output(), false);
-        nor_gate.input(&false, &false);
-        assert_eq!(nor_gate.output(), true);
+    #[rstest]
+    #[case(true, true, false)]
+    #[case(true, false, false)]
+    #[case(false, true, false)]
+    #[case(false, false, true)]
+    fn test_nor_gate_with_truth_table(#[case] a: bool, #[case] b: bool, #[case] c: bool) {
+        let mut nor_gate = NORGate::default();
+        nor_gate.input(&a, &b);
+        assert_eq!(nor_gate.output(), c);
     }
 }
