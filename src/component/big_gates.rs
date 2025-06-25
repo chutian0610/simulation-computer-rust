@@ -78,7 +78,8 @@ impl Component for ORGate3 {
     }
 }
 
-/// N way-input big AND gates
+/// N way-input big AND gates.
+/// in a traveling wave type circuit structure.
 pub struct ANDGateN {
     n_way: usize,
     input: Vec<Wire>,
@@ -133,11 +134,65 @@ impl Component for ANDGateN {
     }
 }
 
+/// N way-input big OR gates.
+/// in a traveling wave type circuit structure.
+pub struct ORGateN {
+    n_way: usize,
+    input: Vec<Wire>,
+    or_gate: Vec<ORGate>,
+    output: Wire,
+}
+
+impl ORGateN {
+    fn new(n_way: usize) -> Self {
+        Self {
+            n_way,
+            input: vec![Wire::default(); n_way],
+            or_gate: vec![ORGate::default(); n_way - 1],
+            output: Wire::default(),
+        }
+    }
+}
+
+impl Component for ORGateN {
+    fn get_pin_count(&self) -> (usize, usize) {
+        (self.n_way, 1)
+    }
+
+    fn get_pin_output(&self, position: usize) -> Potential {
+        assert!(
+            position < self.get_pin_count().1,
+            "position must be less than  {}",
+            self.get_pin_count().1
+        );
+        self.output.output()
+    }
+
+    fn set_pin_input(&mut self, position: usize, value: &Potential) {
+        assert!(
+            position < self.get_pin_count().0,
+            "position must be less than {}",
+            self.get_pin_count().0
+        );
+        self.input[position].input(&value);
+    }
+
+    fn update_state(&mut self) {
+        self.or_gate[0].input(&self.input[0].output(), &self.input[1].output());
+        for i in 1..self.n_way - 1 {
+            // use tmp variable avoid borrow problem
+            let tmp_1 = &self.or_gate[i - 1].output();
+            let tmp_2 = &self.input[i + 1].output();
+            self.or_gate[i].input(tmp_1, tmp_2);
+        }
+        self.output.input(&self.or_gate[self.n_way - 2].output());
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use rstest::rstest;
-
     #[test]
     fn test_and_gate_3_default() {
         let and_gate_3 = ANDGate3::default();
@@ -217,5 +272,32 @@ mod tests {
         and_gate_3.input(&vec![a, b, c]);
         and_gate_3.update_state();
         assert_eq!(and_gate_3.output(), vec![d]);
+    }
+
+    #[test]
+    fn test_or_gate_n_3_default() {
+        let or_gate: ORGateN = ORGateN::new(3);
+        assert_eq!(or_gate.output(), vec![false]);
+    }
+
+    #[rstest]
+    #[case(true, true, true, true)]
+    #[case(true, true, false, true)]
+    #[case(true, false, true, true)]
+    #[case(true, false, false, true)]
+    #[case(false, true, true, true)]
+    #[case(false, true, false, true)]
+    #[case(false, false, true, true)]
+    #[case(false, false, false, false)]
+    fn test_or_gate_n_3_with_truth_table(
+        #[case] a: bool,
+        #[case] b: bool,
+        #[case] c: bool,
+        #[case] d: bool,
+    ) {
+        let mut or_gate_3 = ORGateN::new(3);
+        or_gate_3.input(&vec![a, b, c]);
+        or_gate_3.update_state();
+        assert_eq!(or_gate_3.output(), vec![d]);
     }
 }

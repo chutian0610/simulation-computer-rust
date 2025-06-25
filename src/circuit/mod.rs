@@ -67,7 +67,7 @@ impl ANDGate {
 }
 
 /// OR gate in circuit.
-#[derive(Default)]
+#[derive(Default,Clone)]
 pub struct ORGate {
     wire: Wire,
 }

@@ -3,6 +3,7 @@ use std::vec;
 use crate::circuit::Potential;
 
 pub mod big_gates;
+pub mod adder;
 pub trait Component {
     /// Obtain the output of the pin at the corresponding position of the component
     fn get_pin_output(&self, position: usize) -> Potential;
