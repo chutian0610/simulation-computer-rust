@@ -3,7 +3,7 @@ use crate::circuit::{ANDGate, ORGate, Potential, Wire};
 use super::Component;
 
 /// 3-input big AND gates
-#[derive(Default)]
+#[derive(Debug, Default, Clone)]
 pub struct ANDGate3 {
     input: [Wire; 3],
     and_gate: [ANDGate; 2],
@@ -26,7 +26,7 @@ impl Component for ANDGate3 {
             "position must be less than {}",
             self.get_pin_count().0
         );
-        self.input[position].input(&value);
+        self.input[position].input(value);
     }
 
     fn update_state(&mut self) {
@@ -41,7 +41,7 @@ impl Component for ANDGate3 {
 }
 
 /// 3-input big OR gates
-#[derive(Default)]
+#[derive(Debug, Default, Clone)]
 pub struct ORGate3 {
     input: [Wire; 3],
     or_gate: [ORGate; 2],
@@ -64,7 +64,7 @@ impl Component for ORGate3 {
             "position must be less than {}",
             self.get_pin_count().0
         );
-        self.input[position].input(&value);
+        self.input[position].input(value);
     }
 
     fn update_state(&mut self) {
@@ -80,6 +80,7 @@ impl Component for ORGate3 {
 
 /// N way-input big AND gates.
 /// in a traveling wave type circuit structure.
+#[derive(Debug, Clone)]
 pub struct ANDGateN {
     n_way: usize,
     input: Vec<Wire>,
@@ -118,7 +119,7 @@ impl Component for ANDGateN {
             "position must be less than {}",
             self.get_pin_count().0
         );
-        self.input[position].input(&value);
+        self.input[position].input(value);
     }
 
     fn update_state(&mut self) {
@@ -136,6 +137,7 @@ impl Component for ANDGateN {
 
 /// N way-input big OR gates.
 /// in a traveling wave type circuit structure.
+#[derive(Debug, Clone)]
 pub struct ORGateN {
     n_way: usize,
     input: Vec<Wire>,
@@ -174,7 +176,7 @@ impl Component for ORGateN {
             "position must be less than {}",
             self.get_pin_count().0
         );
-        self.input[position].input(&value);
+        self.input[position].input(value);
     }
 
     fn update_state(&mut self) {

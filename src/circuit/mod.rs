@@ -1,8 +1,35 @@
+//!
+//! Circuit module.
+//!
+//! This module defines the circuit and the components of the circuit.
+//!
+//! # Examples
+//!
+//! ```
+//! use simulation_computer_rust::circuit::{ANDGate, ORGate, NOTGate, Wire};
+//!
+//! let mut and_gate = ANDGate::default();
+//! let mut or_gate = ORGate::default();
+//! let mut not_gate = NOTGate::default();
+//! let mut wire = Wire::default();
+//!
+//! and_gate.input(&true, &false);
+//! or_gate.input(&true, &false);
+//! not_gate.input(&true);
+//!
+//! wire.input(&and_gate.output());
+//!
+//! assert_eq!(wire.output(), false);
+//! assert_eq!(and_gate.output(), false);
+//! assert_eq!(or_gate.output(), true);
+//! assert_eq!(not_gate.output(), false);
+//! ```
 
+/// Potential in circuit.
 pub type Potential = bool;
 
 /// Wire in circuit.
-#[derive(Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Wire {
     potential: Potential,
 }
@@ -51,7 +78,7 @@ pub fn operator_nor(a: &Potential, b: &Potential) -> Potential {
 }
 
 /// AND gate in circuit.
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct ANDGate {
     wire: Wire,
 }
@@ -67,7 +94,7 @@ impl ANDGate {
 }
 
 /// OR gate in circuit.
-#[derive(Default,Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct ORGate {
     wire: Wire,
 }
@@ -83,7 +110,7 @@ impl ORGate {
 }
 
 /// NOT gate in circuit.
-#[derive(Default)]
+#[derive(Debug, Default, Clone)]
 pub struct NOTGate {
     wire: Wire,
 }
@@ -100,7 +127,7 @@ impl NOTGate {
 }
 
 /// XOR gate in circuit.
-#[derive(Default)]
+#[derive(Debug, Default, Clone)]
 pub struct XORGate {
     wire: Wire,
 }
@@ -116,7 +143,7 @@ impl XORGate {
     }
 }
 /// NAND gate in circuit.
-#[derive(Default)]
+#[derive(Debug, Default, Clone)]
 pub struct NANDGate {
     wire: Wire,
 }
@@ -132,7 +159,7 @@ impl NANDGate {
 }
 
 /// NOR gate in circuit.
-#[derive(Default)]
+#[derive(Debug, Default, Clone)]
 pub struct NORGate {
     wire: Wire,
 }
