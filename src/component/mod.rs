@@ -42,6 +42,14 @@ pub trait Component {
             self.set_pin_input(i, &vec[i]);
         }
     }
+    /// Perform batch input for the component, and update the state of the component.
+    ///
+    /// # Arguments
+    /// * `vec` - A reference to a vector of potential values.
+    fn fire(&mut self, vec: &Vec<Potential>) {
+        self.input(vec);
+        self.update_state();
+    }
 
     /// Perform batch output for the component.
     ///
