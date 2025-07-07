@@ -6,7 +6,7 @@ use crate::{
 /// a half adder in circuite.
 /// the input is 2 bits, and the output is 2 bits.
 ///
-/// ```
+/// ```ascii
 ///       ┌────────────────┐          
 /// A─────┼                ┼─────Carry
 ///       │   Half Adder   │          
@@ -64,7 +64,7 @@ impl Component for HalfAdder {
 /// a full adder in circuite.
 /// the input is 3 bits, and the output is 2 bits.
 ///
-/// ```
+/// ```ascii
 ///       ┌────────────────┐                    ┌────┐        
 /// A─────┼A              C┼────────────────────┼    │        
 ///       │   Half Adder   │                    │ OR ┼───Carry
