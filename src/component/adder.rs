@@ -79,7 +79,7 @@ impl Component for HalfAdder {
 ///                        └────────────────┘                 
 ///```
 /// # input
-/// the last bit is carry from another adder
+/// the first 1 bit is A , the next 1 bit is B and the last bit is carry from another adder
 ///
 /// # output
 /// the first bit is the carry bit, and the second bit is the sum bit.
@@ -122,6 +122,110 @@ impl Component for FullAdder {
         self.output[0].input(&out2[0]);
         // Carry
         self.output[1].input(&self.or_gate.output());
+    }
+}
+#[cfg_attr(doc, aquamarine::aquamarine)]
+/// a ripple carry adder in circuite.
+/// the input is 2*n+1 bits, and the output is n+1 bits.
+///
+/// [4 bit ripple carry adder example](https://upload.wikimedia.org/wikipedia/commons/5/5d/4-bit_ripple_carry_adder.svg)
+/// 
+/// # input
+/// the first n bit is A, the next n bit is B and the last bit is carry from another adder
+/// 
+/// ```mermaid
+///  ---
+///  title: "input Packet"
+///  ---
+///  packet-beta
+///  0: "a3"
+///  1: "a2"
+///  2: "a1"
+///  3: "a0"
+///  4: "b3"
+///  5: "b2"
+///  6: "b1"
+///  7: "b0"
+///  8: "carry"
+/// ```
+///
+/// # output
+/// the first bit is the carry bit, and the next n bit is the sum bit.
+/// ```mermaid
+///  ---
+///  title: "output Packet"
+///  ---
+///  packet-beta
+///  0: "carry"
+///  1: "s3"
+///  2: "s2"
+///  3: "s1"
+///  4: "s0"
+/// ```
+#[derive(Debug, Clone)]
+struct RippleCarryAdder {
+    n_way: usize,
+    input: Vec<Wire>,
+    full_adders: Vec<FullAdder>,
+    output: Vec<Wire>,
+}
+
+impl RippleCarryAdder {
+    fn new(n_way: usize) -> Self {
+        Self {
+            n_way,
+            input: vec![Wire::default(); 2*n_way+1],
+            full_adders: vec![FullAdder::default(); n_way],
+            output: vec![Wire::default(); n_way + 1]
+        }
+    }
+}
+
+impl Component for RippleCarryAdder {
+    fn get_pin_count(&self) -> (usize, usize) {
+        (2*self.n_way+1,self.n_way+1)
+    }
+    fn set_pin_input(&mut self, position: usize, value: &Potential) {
+        assert!(
+            position < self.get_pin_count().0,
+            "position must be less than {}",
+            self.get_pin_count().0
+        );
+        self.input[position].input(value);
+    }
+    fn get_pin_output(&self, position: usize) -> Potential {
+        assert!(
+            position < self.get_pin_count().1,
+            "position must be less than {}",
+            self.get_pin_count().1
+        );
+        self.output[position].output()
+    }
+    
+    fn update_state(&mut self) {
+        // the fist full adder's carry bit is the carry bit from another adder
+        self.full_adders[self.n_way-1].fire(&vec![
+            // first bit of A 
+            self.input[self.n_way-1].output(),
+            // first bit of B
+            self.input[2*self.n_way-1].output(),
+            // carry
+            self.input[2*self.n_way].output()
+        ]);
+        let mut cursor = self.full_adders[self.n_way-1].output();
+        for i in 1..self.n_way {
+            self.output[self.n_way+1-i].input(&cursor[1]);
+            self.full_adders[self.n_way-1-i].fire(&vec![
+                self.input[self.n_way-1-i].output(),
+                self.input[2*self.n_way-1-i].output(),
+                // carry
+                cursor[0]
+            ]);
+            cursor = self.full_adders[self.n_way-i-1].output();
+
+        }
+        self.output[1].input(&cursor[1]);
+        self.output[0].input(&cursor[0]);
     }
 }
 

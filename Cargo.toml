@@ -4,9 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+aquamarine = "0.6.0"
 
 [dev-dependencies]
 rstest = "0.25.0"
+
 
 [lib]
 name = "simulation_computer_rust"

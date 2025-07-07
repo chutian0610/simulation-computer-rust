@@ -49,6 +49,111 @@ impl Wire {
     }
 }
 
+/// Potentials in circuit.
+
+#[derive(Debug, Clone)]
+pub struct Potentials {
+    data: Vec<Potential>,
+    little_endian: bool,
+}
+
+impl Potentials {
+    /// Create a new Potentials.
+    pub fn of_little_endian(potentials: Vec<Potential>) -> Self {
+        Self {
+            data: potentials,
+            little_endian: true,
+        }
+    }
+
+    pub fn of_big_endian(potentials: Vec<Potential>) -> Self {
+        Self {
+            data: potentials,
+            little_endian: false,
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+
+    /// Get the raw data of the Potentials.
+    ///
+    /// # Arguments
+    ///
+    /// * `little_endian` - The endian of the Potentials.
+    /// * `format_type` - The format type of the Potentials.
+    ///     * `0` - No format.
+    ///     * `1` - 4 bits per group(Nibble).
+    ///     * `2` - 8 bits per group(Byte).
+    ///
+    /// # Returns
+    ///
+    /// * `String` - The raw data of the Potentials.
+    pub fn to_raw(&self, little_endian: bool, format_type: usize) -> String {
+        assert!(format_type <= 2);
+        fn format(data: &Vec<Potential>, rev: bool, format_type: usize) -> String {
+            let mut s = String::with_capacity(data.len());
+            let items: Vec<&Potential> = if rev {
+                data.iter().rev().collect()
+            } else {
+                data.iter().collect()
+            };
+            let mut count = 0;
+            for p in items {
+                s.push(if *p { '1' } else { '0' });
+                if format_type == 1 && count % 4 == 0 && count != 0 {
+                    s.push(' ');
+                } else if format_type == 2 && count % 8 == 0 && count != 0 {
+                    s.push(' ');
+                }
+                count += 1;
+            }
+            s
+        }
+
+        if self.little_endian ^ little_endian {
+            // target endian different to current endian
+            format(&self.data, true, format_type)
+        } else {
+            // target endian same as current endian
+            format(&self.data, false, format_type)
+        }
+    }
+
+    /// Get the little endian raw data of the Potentials.
+    ///
+    /// # Arguments
+    ///
+    /// * `format_type` - The format type of the Potentials. Default `1`
+    ///     * `0` - No format.
+    ///     * `1` - 4 bits per group(Nibble).
+    ///     * `2` - 8 bits per group(Byte).
+    ///
+    /// # Returns
+    ///
+    /// * `String` - The little endian raw data of the Potentials.
+    pub fn to_little_endian(&self, format_type: Option<usize>) -> String {
+        self.to_raw(true, format_type.unwrap_or(1))
+    }
+
+    /// Get the big endian raw data of the Potentials.
+    ///
+    /// # Arguments
+    ///
+    /// * `format_type` - The format type of the Potentials.Default `1`
+    ///     * `0` - No format.
+    ///     * `1` - 4 bits per group(Nibble).
+    ///     * `2` - 8 bits per group(Byte).
+    ///
+    /// # Returns
+    ///
+    /// * `String` - The big endian raw data of the Potentials.
+    pub fn to_big_endian(&self, format_type: Option<usize>) -> String {
+        self.to_raw(false, format_type.unwrap_or(1))
+    }
+}
+
 /// Operator not in circuit.
 pub fn operator_not(a: &Potential) -> Potential {
     !a
