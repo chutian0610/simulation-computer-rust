@@ -92,32 +92,52 @@ impl Potentials {
     /// * `String` - The raw data of the Potentials.
     pub fn to_raw(&self, little_endian: bool, format_type: usize) -> String {
         assert!(format_type <= 2);
-        fn format(data: &Vec<Potential>, rev: bool, format_type: usize) -> String {
-            let mut s = String::with_capacity(data.len());
-            let items: Vec<&Potential> = if rev {
-                data.iter().rev().collect()
-            } else {
-                data.iter().collect()
-            };
-            let mut count = 0;
+        fn format(items: Vec<&Potential>, format_type: usize, little_endian: bool) -> String {
+            let mut s = String::with_capacity(items.len());
+            let length = items.len();
+            let padding: usize = if format_type == 1 && length %4 !=0 {
+                4-(length%4)
+            } else if format_type == 2 && length %8 !=0 {
+                 8-(length%8)
+            } else {0};
+            let mut cursor = 0;
+            if !little_endian {
+                // big endian padding at the beginning
+                if padding >0 {
+                    for _i in 0..padding  {
+                        s.push('0');               
+                    }
+                }
+                cursor += padding;
+            }
             for p in items {
                 s.push(if *p { '1' } else { '0' });
-                if format_type == 1 && count % 4 == 0 && count != 0 {
+                cursor += 1;
+                if format_type == 1 && cursor % 4 == 0 && cursor != 0 {
                     s.push(' ');
-                } else if format_type == 2 && count % 8 == 0 && count != 0 {
+                } else if format_type == 2 && cursor % 8 == 0 && cursor != 0 {
                     s.push(' ');
                 }
-                count += 1;
             }
-            s
+            if little_endian {
+                // little endian padding at the end
+                if padding >0 {
+                    for _i in 0..padding  {
+                        s.push('0');               
+                    }
+                }
+            }
+            // may end With ''
+            s.trim_end().to_owned()
         }
-
         if self.little_endian ^ little_endian {
             // target endian different to current endian
-            format(&self.data, true, format_type)
+            let items: Vec<&Potential> = self.data.iter().rev().collect();
+            format(items, format_type, little_endian)
         } else {
             // target endian same as current endian
-            format(&self.data, false, format_type)
+            let items: Vec<&Potential> = self.data.iter().collect();
+            format(items, format_type, little_endian)
         }
     }
 
@@ -405,5 +425,50 @@ mod tests {
         let mut nor_gate = NORGate::default();
         nor_gate.input(&a, &b);
         assert_eq!(nor_gate.output(), c);
+    }
+
+    #[rstest]
+    #[case(vec![true,true,true], "111")]
+    #[case(vec![true,true,false], "110")]
+    #[case(vec![true,false,true], "101")]
+    #[case(vec![true,false,false], "100")]
+    #[case(vec![false,true,true], "011")]
+    #[case(vec![false,true,false], "010")]
+    #[case(vec![false,false,true], "001")]
+    #[case(vec![false,false,false], "000")]
+    fn test_potentials_little_endian_2_little(#[case] data: Vec<Potential>,#[case] raw:String) {
+        let potentials: Potentials = Potentials::of_little_endian(data);
+        assert_eq!(potentials.to_little_endian(Some(0)),raw);
+    }
+    #[rstest]
+    #[case(vec![true,true,true],"111")]
+    #[case(vec![true,true,false], "011")]
+    #[case(vec![true,false,true], "101")]
+    #[case(vec![true,false,false], "001")]
+    #[case(vec![false,true,true], "110")]
+    #[case(vec![false,true,false], "010")]
+    #[case(vec![false,false,true], "100")]
+    #[case(vec![false,false,false], "000")]
+    fn test_potentials_big_endian_2_little(#[case] data: Vec<Potential>,#[case] raw:String) {
+        let potentials: Potentials = Potentials::of_big_endian(data);
+        assert_eq!(potentials.to_little_endian(Some(0)),raw);
+    }
+    #[rstest]
+    #[case(vec![true,true,true,true,false,false], "1111 0000")]
+    #[case(vec![true,true,true,true,false], "1111 0000")]
+    #[case(vec![true,true,true,true,false,false,false,false], "1111 0000")]
+    #[case(vec![true,true,true,true,false,false,false,false,false], "1111 0000 0000")]
+    fn test_potentials_little_endian_format_4(#[case] data: Vec<Potential>,#[case] raw:String) {
+        let potentials: Potentials = Potentials::of_little_endian(data);
+        assert_eq!(potentials.to_little_endian(Some(1)),raw);
+    }
+    #[rstest]
+    #[case(vec![true,true,true,true,false,false], "0011 1100")]
+    #[case(vec![true,true,true,true,false], "0001 1110")]
+    #[case(vec![true,true,true,true,false,false,false,false], "1111 0000")]
+    #[case(vec![true,true,true,true,false,false,false,false,false], "0001 1110 0000")]
+    fn test_potentials_big_endian_format_4(#[case] data: Vec<Potential>,#[case] raw:String) {
+        let potentials: Potentials = Potentials::of_big_endian(data);
+        assert_eq!(potentials.to_big_endian(Some(1)),raw);
     }
 }

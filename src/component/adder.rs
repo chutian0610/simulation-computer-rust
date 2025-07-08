@@ -14,7 +14,7 @@ use crate::{
 ///       └────────────────┘             
 /// ```
 /// # output   
-/// the first bit is the carry bit, and the second bit is the sum bit.
+/// the first bit is the sum bit, and the second bit is the carry bit.
 /// the sum bit is the xor of the two bits.
 /// the carry bit is the and of the two bits.
 ///
@@ -82,7 +82,7 @@ impl Component for HalfAdder {
 /// the first 1 bit is A , the next 1 bit is B and the last bit is carry from another adder
 ///
 /// # output
-/// the first bit is the carry bit, and the second bit is the sum bit.
+/// the first bit is the sum bit, and the second bit is the carry bit.
 
 #[derive(Debug, Default, Clone)]
 struct FullAdder {
@@ -131,36 +131,36 @@ impl Component for FullAdder {
 /// [4 bit ripple carry adder example](https://upload.wikimedia.org/wikipedia/commons/5/5d/4-bit_ripple_carry_adder.svg)
 /// 
 /// # input
-/// the first n bit is A, the next n bit is B and the last bit is carry from another adder
+/// the first 1 bit is Carry from another adder, the next n bit is A and the last N bit is B 
 /// 
 /// ```mermaid
 ///  ---
 ///  title: "input Packet"
 ///  ---
 ///  packet-beta
-///  0: "a3"
-///  1: "a2"
+///  0: "carry"
+///  1: "a0"
 ///  2: "a1"
-///  3: "a0"
-///  4: "b3"
-///  5: "b2"
+///  3: "a2"
+///  4: "a3"
+///  5: "b0"
 ///  6: "b1"
-///  7: "b0"
-///  8: "carry"
+///  7: "b2"
+///  8: "b3"
 /// ```
 ///
 /// # output
-/// the first bit is the carry bit, and the next n bit is the sum bit.
+/// the first n bit is the sum bit, and the next 1 bit is the carry bit.
 /// ```mermaid
 ///  ---
 ///  title: "output Packet"
 ///  ---
 ///  packet-beta
-///  0: "carry"
-///  1: "s3"
+///  0: "s0"
+///  1: "s1"
 ///  2: "s2"
-///  3: "s1"
-///  4: "s0"
+///  3: "s3"
+///  4: "carry"
 /// ```
 #[derive(Debug, Clone)]
 struct RippleCarryAdder {
@@ -204,28 +204,32 @@ impl Component for RippleCarryAdder {
     
     fn update_state(&mut self) {
         // the fist full adder's carry bit is the carry bit from another adder
-        self.full_adders[self.n_way-1].fire(&vec![
+        self.full_adders[0].fire(&vec![
             // first bit of A 
-            self.input[self.n_way-1].output(),
+            self.input[1].output(),
             // first bit of B
-            self.input[2*self.n_way-1].output(),
+            self.input[1+self.n_way].output(),
             // carry
-            self.input[2*self.n_way].output()
+            self.input[0].output()
         ]);
-        let mut cursor = self.full_adders[self.n_way-1].output();
+        // cursor = (sum,carry)
+        let mut cursor = self.full_adders[0].output();
         for i in 1..self.n_way {
-            self.output[self.n_way+1-i].input(&cursor[1]);
-            self.full_adders[self.n_way-1-i].fire(&vec![
-                self.input[self.n_way-1-i].output(),
-                self.input[2*self.n_way-1-i].output(),
+            self.output[i-1].input(&cursor[0]);
+            self.full_adders[i].fire(&vec![
+                self.input[1+i].output(),
+                self.input[1+self.n_way+i].output(),
                 // carry
-                cursor[0]
+                cursor[1]
             ]);
-            cursor = self.full_adders[self.n_way-i-1].output();
+            // update cursor
+            cursor = self.full_adders[i].output();
 
         }
-        self.output[1].input(&cursor[1]);
-        self.output[0].input(&cursor[0]);
+        // last sum
+        self.output[self.n_way-1].input(&cursor[0]);
+        // last carry
+        self.output[self.n_way].input(&cursor[1]);
     }
 }
 
