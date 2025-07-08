@@ -3,7 +3,10 @@ use crate::{
     component::{Component, big_gates::ORGate3},
 };
 
-/// 2-1 Encoder.
+/// 2-1 Simple Encoder.
+/// 
+/// # description
+/// [Simple Encoder](https://en.wikipedia.org/wiki/Encoder_(digital)) convert 2 bits to 1 bit.
 /// 
 /// # truth table
 /// | I0 | I1 | OUT |
@@ -42,7 +45,10 @@ impl Component for Encoder2_1 {
     }
 }
 
-/// 4-2 Encoder.
+/// 4-2 Simple Encoder.
+/// 
+/// # description
+/// [Simple Encoder](https://en.wikipedia.org/wiki/Encoder_(digital)) convert 4 bits to 2 bit.
 /// 
 /// # truth table
 /// | I0 | I1 | I2 | I3 | OUT0 | OUT1 |
@@ -112,7 +118,7 @@ impl Component for Encoder4_2 {
 /// 4-2 Priority Encoder.
 ///
 /// # description
-/// 4-2 Priority Encoder is a 4-2 Encoder with priority.
+/// 4-2 [Priority Encoder](https://en.wikipedia.org/wiki/Priority_encoder) is a 4-2 Encoder with priority.
 /// The priority is I3 > I2 > I1 > I0.
 ///
 /// # truth table
