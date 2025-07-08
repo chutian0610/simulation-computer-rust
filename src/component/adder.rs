@@ -112,9 +112,9 @@ impl Component for FullAdder {
         self.output[position].output()
     }
     fn update_state(&mut self) {
-        self.half_adder[0].fire(&vec![self.input[0].output(), self.input[1].output()]);
+        self.half_adder[0].input(&vec![self.input[0].output(), self.input[1].output()]);
         let out1 = self.half_adder[0].output();
-        self.half_adder[1].fire(&vec![out1[0], self.input[2].output()]);
+        self.half_adder[1].input(&vec![out1[0], self.input[2].output()]);
         let out2 = self.half_adder[1].output();
         self.or_gate.input(&out1[1], &out2[1]);
         // Little-Endian
@@ -129,10 +129,10 @@ impl Component for FullAdder {
 /// the input is 2*n+1 bits, and the output is n+1 bits.
 ///
 /// [4 bit ripple carry adder example](https://upload.wikimedia.org/wikipedia/commons/5/5d/4-bit_ripple_carry_adder.svg)
-/// 
+///
 /// # input
-/// the first 1 bit is Carry from another adder, the next n bit is A and the last N bit is B 
-/// 
+/// the first 1 bit is Carry from another adder, the next n bit is A and the last N bit is B
+///
 /// ```mermaid
 ///  ---
 ///  title: "input Packet"
@@ -174,16 +174,16 @@ impl RippleCarryAdder {
     fn new(n_way: usize) -> Self {
         Self {
             n_way,
-            input: vec![Wire::default(); 2*n_way+1],
+            input: vec![Wire::default(); 2 * n_way + 1],
             full_adders: vec![FullAdder::default(); n_way],
-            output: vec![Wire::default(); n_way + 1]
+            output: vec![Wire::default(); n_way + 1],
         }
     }
 }
 
 impl Component for RippleCarryAdder {
     fn get_pin_count(&self) -> (usize, usize) {
-        (2*self.n_way+1,self.n_way+1)
+        (2 * self.n_way + 1, self.n_way + 1)
     }
     fn set_pin_input(&mut self, position: usize, value: &Potential) {
         assert!(
@@ -201,33 +201,32 @@ impl Component for RippleCarryAdder {
         );
         self.output[position].output()
     }
-    
+
     fn update_state(&mut self) {
         // the fist full adder's carry bit is the carry bit from another adder
-        self.full_adders[0].fire(&vec![
-            // first bit of A 
+        self.full_adders[0].input(&vec![
+            // first bit of A
             self.input[1].output(),
             // first bit of B
-            self.input[1+self.n_way].output(),
+            self.input[1 + self.n_way].output(),
             // carry
-            self.input[0].output()
+            self.input[0].output(),
         ]);
         // cursor = (sum,carry)
         let mut cursor = self.full_adders[0].output();
         for i in 1..self.n_way {
-            self.output[i-1].input(&cursor[0]);
-            self.full_adders[i].fire(&vec![
-                self.input[1+i].output(),
-                self.input[1+self.n_way+i].output(),
+            self.output[i - 1].input(&cursor[0]);
+            self.full_adders[i].input(&vec![
+                self.input[1 + i].output(),
+                self.input[1 + self.n_way + i].output(),
                 // carry
-                cursor[1]
+                cursor[1],
             ]);
             // update cursor
             cursor = self.full_adders[i].output();
-
         }
         // last sum
-        self.output[self.n_way-1].input(&cursor[0]);
+        self.output[self.n_way - 1].input(&cursor[0]);
         // last carry
         self.output[self.n_way].input(&cursor[1]);
     }
@@ -253,7 +252,7 @@ mod tests {
     #[test]
     fn test_ripple_carry_adder_default() {
         let adder_4 = RippleCarryAdder::new(4);
-        assert_eq!(adder_4.output(), vec![false, false,false,false,false]);
+        assert_eq!(adder_4.output(), vec![false, false, false, false, false]);
     }
 
     #[rstest]
@@ -298,20 +297,20 @@ mod tests {
 
     #[rstest]
     /// carry | a | b  => sum | carry
-    #[case("0 00 00","00 0")]
-    #[case("0 10 00","10 0")]
-    #[case("0 10 10","01 0")]
-    #[case("0 11 10","00 1")]
-    #[case("0 11 11","01 1")]
-    #[case("1 00 00","10 0")]
-    #[case("1 10 00","01 0")]
-    #[case("1 10 10","11 0")]
-    #[case("1 11 10","10 1")]
-    #[case("1 11 11","11 1")]
-    fn test_ripple_carry_adder_input(#[case] input:String,#[case] output:String) {
+    #[case("0 00 00", "00 0")]
+    #[case("0 10 00", "10 0")]
+    #[case("0 10 10", "01 0")]
+    #[case("0 11 10", "00 1")]
+    #[case("0 11 11", "01 1")]
+    #[case("1 00 00", "10 0")]
+    #[case("1 10 00", "01 0")]
+    #[case("1 10 10", "11 0")]
+    #[case("1 11 10", "10 1")]
+    #[case("1 11 11", "11 1")]
+    fn test_ripple_carry_adder_input(#[case] input: String, #[case] output: String) {
         let mut adder_2 = RippleCarryAdder::new(2);
         let i: Potentials = Potentials::from_little_endian(&input, false);
-        adder_2.fire(&i.get_data(true));
+        adder_2.input(&i.get_data(true));
         let o = Potentials::from_little_endian(&output, false);
         assert_eq!(adder_2.output(), o.get_data(true));
     }

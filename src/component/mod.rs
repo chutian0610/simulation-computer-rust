@@ -4,6 +4,9 @@ use crate::circuit::Potential;
 
 pub mod adder;
 pub mod big_gates;
+pub mod enabler;
+pub mod decoder;
+pub mod encoder;
 
 /// A trait representing a component with input and output pins.
 pub trait Component {
@@ -36,7 +39,7 @@ pub trait Component {
     ///
     /// # Arguments
     /// * `vec` - A reference to a vector of potential values.
-    fn input(&mut self, vec: &Vec<Potential>) {
+    fn prepare_input(&mut self, vec: &Vec<Potential>) {
         assert!(vec.len() <= self.get_pin_count().0);
         for i in 0..vec.len() {
             self.set_pin_input(i, &vec[i]);
@@ -46,8 +49,8 @@ pub trait Component {
     ///
     /// # Arguments
     /// * `vec` - A reference to a vector of potential values.
-    fn fire(&mut self, vec: &Vec<Potential>) {
-        self.input(vec);
+    fn input(&mut self, vec: &Vec<Potential>) {
+        self.prepare_input(vec);
         self.update_state();
     }
 
