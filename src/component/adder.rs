@@ -235,6 +235,8 @@ impl Component for RippleCarryAdder {
 
 #[cfg(test)]
 mod tests {
+    use crate::{circuit::Potentials, component::adder};
+
     use super::*;
     use rstest::rstest;
     #[test]
@@ -246,6 +248,12 @@ mod tests {
     fn test_full_adder_default() {
         let full_adder = FullAdder::default();
         assert_eq!(full_adder.output(), vec![false, false]);
+    }
+
+    #[test]
+    fn test_ripple_carry_adder_default() {
+        let adder_4 = RippleCarryAdder::new(4);
+        assert_eq!(adder_4.output(), vec![false, false,false,false,false]);
     }
 
     #[rstest]
@@ -286,5 +294,25 @@ mod tests {
         full_adder.input(&vec![a, b, c]);
         full_adder.update_state();
         assert_eq!(full_adder.output(), vec![d, e]);
+    }
+
+    #[rstest]
+    /// carry | a | b  => sum | carry
+    #[case("0 00 00","00 0")]
+    #[case("0 10 00","10 0")]
+    #[case("0 10 10","01 0")]
+    #[case("0 11 10","00 1")]
+    #[case("0 11 11","01 1")]
+    #[case("1 00 00","10 0")]
+    #[case("1 10 00","01 0")]
+    #[case("1 10 10","11 0")]
+    #[case("1 11 10","10 1")]
+    #[case("1 11 11","11 1")]
+    fn test_ripple_carry_adder_input(#[case] input:String,#[case] output:String) {
+        let mut adder_2 = RippleCarryAdder::new(2);
+        let i: Potentials = Potentials::from_little_endian(&input, false);
+        adder_2.fire(&i.get_data(true));
+        let o = Potentials::from_little_endian(&output, false);
+        assert_eq!(adder_2.output(), o.get_data(true));
     }
 }
