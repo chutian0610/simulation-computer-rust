@@ -28,6 +28,50 @@
 /// Potential in circuit.
 pub type Potential = bool;
 
+trait PotentialOperators {
+    /// Operator not in circuit.
+    fn op_not(a: &Potential) -> Potential;
+    /// Operator and in circuit.
+    fn op_and(a: &Potential, b: &Potential) -> Potential;
+    /// Operator or in circuit.
+    fn op_or(a: &Potential, b: &Potential) -> Potential;
+    /// Operator xor in circuit.
+    fn op_xor(a: &Potential, b: &Potential) -> Potential;
+    /// Operator nand in circuit.
+    fn op_nand(a: &Potential, b: &Potential) -> Potential;
+    /// Operator nor in circuit.
+    fn op_nor(a: &Potential, b: &Potential) -> Potential;
+}
+
+impl PotentialOperators for Potential {
+    /// Operator not in circuit.
+    fn op_not(a: &Potential) -> Potential {
+        !a
+    }
+    /// Operator and in circuit.
+    fn op_and(a: &Potential, b: &Potential) -> Potential {
+        a.to_owned() && b.to_owned()
+    }
+
+    /// Operator or in circuit.
+    fn op_or(a: &Potential, b: &Potential) -> Potential {
+        a.to_owned() || b.to_owned()
+    }
+    /// Operator xor in circuit.
+    fn op_xor(a: &Potential, b: &Potential) -> Potential {
+        a ^ b
+    }
+    /// Operator nand in circuit.
+    fn op_nand(a: &Potential, b: &Potential) -> Potential {
+        Self::op_not(&Self::op_and(a, b))
+    }
+
+    /// Operator nor in circuit.
+    fn op_nor(a: &Potential, b: &Potential) -> Potential {
+        Self::op_not(&Self::op_or(a, b))
+    }
+}
+
 /// Wire in circuit.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Wire {
@@ -69,7 +113,7 @@ impl Potentials {
     pub fn get_data(&self, little_endian: bool) -> Vec<Potential> {
         if self.little_endian ^ little_endian {
             self.data.iter().rev().cloned().collect()
-        }else {
+        } else {
             self.data.iter().cloned().collect()
         }
     }
@@ -82,7 +126,7 @@ impl Potentials {
     }
 
     /// Create a new Potentials from little endian string.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `little_endian` - The little endian string.
@@ -91,7 +135,7 @@ impl Potentials {
     /// # Returns
     ///
     /// * `Self` - The new Potentials.
-    pub fn from_little_endian(little_endian: &str, ignore_padding : bool) ->Self {
+    pub fn from_little_endian(little_endian: &str, ignore_padding: bool) -> Self {
         let mut data = Vec::new();
         let mut ignore = true;
         for c in little_endian.chars().rev() {
@@ -100,12 +144,12 @@ impl Potentials {
                     ignore = ignore && true;
                     if !ignore_padding || (ignore_padding && !ignore) {
                         data.push(false);
-                    } 
-                },
+                    }
+                }
                 '1' => {
                     ignore = ignore && false;
                     data.push(true);
-                } 
+                }
                 ' ' => continue,
                 _ => panic!("Invalid character in little endian string"),
             }
@@ -118,7 +162,7 @@ impl Potentials {
     }
 
     /// Create a new Potentials from big endian string.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `big_endian` - The big endian string.
@@ -127,7 +171,7 @@ impl Potentials {
     /// # Returns
     ///
     /// * `Self` - The new Potentials.
-    pub fn from_big_endian(big_endian: &str, ignore_padding : bool) ->Self {
+    pub fn from_big_endian(big_endian: &str, ignore_padding: bool) -> Self {
         let mut data = Vec::new();
         let mut ignore = true;
         for c in big_endian.chars() {
@@ -139,14 +183,13 @@ impl Potentials {
                     } else {
                         if !ignore {
                             data.push(false);
-                        } 
-                    } 
-
-                },
+                        }
+                    }
+                }
                 '1' => {
                     ignore = ignore && false;
                     data.push(true);
-                } 
+                }
                 ' ' => continue,
                 _ => panic!("Invalid character in little endian string"),
             }
@@ -179,17 +222,19 @@ impl Potentials {
         fn format(items: Vec<&Potential>, format_type: usize, little_endian: bool) -> String {
             let mut s = String::with_capacity(items.len());
             let length = items.len();
-            let padding: usize = if format_type == 1 && length %4 !=0 {
-                4-(length%4)
-            } else if format_type == 2 && length %8 !=0 {
-                 8-(length%8)
-            } else {0};
+            let padding: usize = if format_type == 1 && length % 4 != 0 {
+                4 - (length % 4)
+            } else if format_type == 2 && length % 8 != 0 {
+                8 - (length % 8)
+            } else {
+                0
+            };
             let mut cursor = 0;
             if !little_endian {
                 // big endian padding at the beginning
-                if padding >0 {
-                    for _i in 0..padding  {
-                        s.push('0');               
+                if padding > 0 {
+                    for _i in 0..padding {
+                        s.push('0');
                     }
                 }
                 cursor += padding;
@@ -205,9 +250,9 @@ impl Potentials {
             }
             if little_endian {
                 // little endian padding at the end
-                if padding >0 {
-                    for _i in 0..padding  {
-                        s.push('0');               
+                if padding > 0 {
+                    for _i in 0..padding {
+                        s.push('0');
                     }
                 }
             }
@@ -258,34 +303,6 @@ impl Potentials {
     }
 }
 
-/// Operator not in circuit.
-pub fn operator_not(a: &Potential) -> Potential {
-    !a
-}
-
-/// Operator and in circuit.
-pub fn operator_and(a: &Potential, b: &Potential) -> Potential {
-    a.to_owned() && b.to_owned()
-}
-
-/// Operator or in circuit.
-pub fn operator_or(a: &Potential, b: &Potential) -> Potential {
-    a.to_owned() || b.to_owned()
-}
-/// Operator xor in circuit.
-pub fn operator_xor(a: &Potential, b: &Potential) -> Potential {
-    a ^ b
-}
-/// Operator nand in circuit.
-pub fn operator_nand(a: &Potential, b: &Potential) -> Potential {
-    operator_not(&operator_and(a, b))
-}
-
-/// Operator nor in circuit.
-pub fn operator_nor(a: &Potential, b: &Potential) -> Potential {
-    operator_not(&operator_or(a, b))
-}
-
 /// AND gate in circuit.
 #[derive(Debug, Default, Clone)]
 pub struct ANDGate {
@@ -298,7 +315,7 @@ impl ANDGate {
     }
     /// Set the input of the gate.
     pub fn input(&mut self, a: &Potential, b: &Potential) {
-        self.wire.input(&operator_and(a, b));
+        self.wire.input(&Potential::op_and(a, b));
     }
 }
 
@@ -314,7 +331,7 @@ impl ORGate {
     }
     /// Set the input of the gate.
     pub fn input(&mut self, a: &Potential, b: &Potential) {
-        self.wire.input(&operator_or(a, b));
+        self.wire.input(&Potential::op_or(a, b));
     }
 }
 
@@ -331,7 +348,7 @@ impl NOTGate {
 
     /// Set the input of the gate.
     pub fn input(&mut self, a: &Potential) {
-        self.wire.input(&operator_not(a));
+        self.wire.input(&Potential::op_not(a));
     }
 }
 
@@ -348,7 +365,7 @@ impl XORGate {
 
     /// Set the input of the gate.
     pub fn input(&mut self, a: &Potential, b: &Potential) {
-        self.wire.input(&operator_xor(a, b));
+        self.wire.input(&Potential::op_xor(a, b));
     }
 }
 /// NAND gate in circuit.
@@ -363,7 +380,7 @@ impl NANDGate {
     }
     /// Set the input of the gate.
     pub fn input(&mut self, a: &Potential, b: &Potential) {
-        self.wire.input(&operator_nand(a, b));
+        self.wire.input(&Potential::op_nand(a, b));
     }
 }
 
@@ -379,7 +396,7 @@ impl NORGate {
     }
     /// Set the input of the gate.
     pub fn input(&mut self, a: &Potential, b: &Potential) {
-        self.wire.input(&operator_nor(a, b));
+        self.wire.input(&Potential::op_nor(a, b));
     }
 }
 
@@ -520,9 +537,9 @@ mod tests {
     #[case(vec![false,true,false], "010")]
     #[case(vec![false,false,true], "001")]
     #[case(vec![false,false,false], "000")]
-    fn test_potentials_little_endian_2_little(#[case] data: Vec<Potential>,#[case] raw:String) {
+    fn test_potentials_little_endian_2_little(#[case] data: Vec<Potential>, #[case] raw: String) {
         let potentials: Potentials = Potentials::of_little_endian(data);
-        assert_eq!(potentials.to_little_endian(Some(0)),raw);
+        assert_eq!(potentials.to_little_endian(Some(0)), raw);
     }
     #[rstest]
     #[case(vec![true,true,true],"111")]
@@ -533,55 +550,61 @@ mod tests {
     #[case(vec![false,true,false], "010")]
     #[case(vec![false,false,true], "100")]
     #[case(vec![false,false,false], "000")]
-    fn test_potentials_big_endian_2_little(#[case] data: Vec<Potential>,#[case] raw:String) {
+    fn test_potentials_big_endian_2_little(#[case] data: Vec<Potential>, #[case] raw: String) {
         let potentials: Potentials = Potentials::of_big_endian(data);
-        assert_eq!(potentials.to_little_endian(Some(0)),raw);
+        assert_eq!(potentials.to_little_endian(Some(0)), raw);
     }
     #[rstest]
     #[case(vec![true,true,true,true,false,false], "1111 0000")]
     #[case(vec![true,true,true,true,false], "1111 0000")]
     #[case(vec![true,true,true,true,false,false,false,false], "1111 0000")]
     #[case(vec![true,true,true,true,false,false,false,false,false], "1111 0000 0000")]
-    fn test_potentials_little_endian_format_4(#[case] data: Vec<Potential>,#[case] raw:String) {
+    fn test_potentials_little_endian_format_4(#[case] data: Vec<Potential>, #[case] raw: String) {
         let potentials: Potentials = Potentials::of_little_endian(data);
-        assert_eq!(potentials.to_little_endian(Some(1)),raw);
+        assert_eq!(potentials.to_little_endian(Some(1)), raw);
     }
     #[rstest]
     #[case(vec![true,true,true,true,false,false], "0011 1100")]
     #[case(vec![true,true,true,true,false], "0001 1110")]
     #[case(vec![true,true,true,true,false,false,false,false], "1111 0000")]
     #[case(vec![true,true,true,true,false,false,false,false,false], "0001 1110 0000")]
-    fn test_potentials_big_endian_format_4(#[case] data: Vec<Potential>,#[case] raw:String) {
+    fn test_potentials_big_endian_format_4(#[case] data: Vec<Potential>, #[case] raw: String) {
         let potentials: Potentials = Potentials::of_big_endian(data);
-        assert_eq!(potentials.to_big_endian(Some(1)),raw);
+        assert_eq!(potentials.to_big_endian(Some(1)), raw);
     }
 
     #[rstest]
     #[case("1111 0000",vec![true,true,true,true,false,false,false,false])]
     #[case("1111 1100",vec![true,true,true,true,true,true,false,false])]
-    fn test_potentials_from_little_endian_str_01(#[case] raw: String,#[case] data: Vec<Potential>) {
-        let potentials: Potentials = Potentials::from_little_endian(&raw,false);
-        assert_eq!(potentials.data,data);
+    fn test_potentials_from_little_endian_str_01(
+        #[case] raw: String,
+        #[case] data: Vec<Potential>,
+    ) {
+        let potentials: Potentials = Potentials::from_little_endian(&raw, false);
+        assert_eq!(potentials.data, data);
     }
     #[rstest]
     #[case("0011 0000",vec![false,false,true,true])]
     #[case("0011 1100",vec![false,false,true,true,true,true])]
-    fn test_potentials_from_little_endian_str_02(#[case] raw: String,#[case] data: Vec<Potential>) {
-        let potentials: Potentials = Potentials::from_little_endian(&raw,true);
-        assert_eq!(potentials.data,data);
+    fn test_potentials_from_little_endian_str_02(
+        #[case] raw: String,
+        #[case] data: Vec<Potential>,
+    ) {
+        let potentials: Potentials = Potentials::from_little_endian(&raw, true);
+        assert_eq!(potentials.data, data);
     }
     #[rstest]
     #[case("0011 0000",vec![false,false,true,true,false,false,false,false])]
     #[case("0011 1100",vec![false,false,true,true,true,true,false,false])]
-    fn test_potentials_from_big_endian_str_01(#[case] raw: String,#[case] data: Vec<Potential>) {
-        let potentials: Potentials = Potentials::from_big_endian(&raw,false);
-        assert_eq!(potentials.data,data);
+    fn test_potentials_from_big_endian_str_01(#[case] raw: String, #[case] data: Vec<Potential>) {
+        let potentials: Potentials = Potentials::from_big_endian(&raw, false);
+        assert_eq!(potentials.data, data);
     }
-        #[rstest]
+    #[rstest]
     #[case("0011 0000",vec![true,true,false,false,false,false])]
     #[case("0011 1100",vec![true,true,true,true,false,false])]
-    fn test_potentials_from_big_endian_str_02(#[case] raw: String,#[case] data: Vec<Potential>) {
-        let potentials: Potentials = Potentials::from_big_endian(&raw,true);
-        assert_eq!(potentials.data,data);
+    fn test_potentials_from_big_endian_str_02(#[case] raw: String, #[case] data: Vec<Potential>) {
+        let potentials: Potentials = Potentials::from_big_endian(&raw, true);
+        assert_eq!(potentials.data, data);
     }
 }
