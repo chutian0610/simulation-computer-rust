@@ -231,6 +231,131 @@ impl Component for RippleCarryAdderN {
         self.output[self.n_way].input(&cursor[1]);
     }
 }
+#[cfg_attr(doc, aquamarine::aquamarine)]
+/// a lookahead carry adder in circuite.
+/// the input is 2*n+1 bits, and the output is n+1 bits.
+///
+/// [4 bit lookahead carry adder example](https://en.wikipedia.org/wiki/Carry-lookahead_adder#/media/File:Four_bit_adder_with_carry_lookahead.svg)
+///
+/// # input
+/// the first 1 bit is Carry from another adder, the next n bit is A and the last N bit is B
+///
+/// ```mermaid
+///  ---
+///  title: "input Packet"
+///  ---
+///  packet-beta
+///  0: "carry"
+///  1: "a0"
+///  2: "a1"
+///  3: "a2"
+///  4: "a3"
+///  5: "b0"
+///  6: "b1"
+///  7: "b2"
+///  8: "b3"
+/// ```
+///
+/// # output
+/// the first n bit is the sum bit, and the next 1 bit is the carry bit.
+/// ```mermaid
+///  ---
+///  title: "output Packet"
+///  ---
+///  packet-beta
+///  0: "s0"
+///  1: "s1"
+///  2: "s2"
+///  3: "s3"
+///  4: "carry"
+/// ```
+#[derive(Debug, Clone)]
+struct LookAheadCarryAdderN {
+    n_way: usize,
+    input: Vec<Wire>,
+    output: Vec<Wire>,
+    p: Vec<XORGate>,
+    g: Vec<ANDGate>,
+    s: Vec<XORGate>,
+    and: Vec<ANDGate>,
+    or: Vec<ORGate>,
+}
+
+impl LookAheadCarryAdderN {
+    fn new(n_way: usize) -> Self {
+        Self {
+            n_way,
+            input: vec![Wire::default(); 2 * n_way + 1],
+            output: vec![Wire::default(); n_way + 1],
+            p: vec![XORGate::default(); n_way],
+            g: vec![ANDGate::default(); n_way],
+            s: vec![XORGate::default(); n_way],
+            and: vec![ANDGate::default(); n_way * (n_way + 1) / 2],
+            or: vec![ORGate::default(); n_way * (n_way + 1) / 2],
+        }
+    }
+    fn get_carry(&mut self, index: usize) -> Potential {
+        if index == 0 {
+            return self.input[0].output();
+        }
+        return self.get_carry_recursion(index, index*(index-1)/2);
+    }
+
+    fn get_carry_recursion(&mut self, index: usize, start: usize) -> Potential {
+        // c0
+        let mut carry = self.input[0].output();
+
+        // ci+1 = gi and (pi or ci)
+        // ci will use i andGate + i orGate. the total usage is i*(i-1)/2
+        for i in 0..index {
+            self.and[start+i].input(&self.p[i].output(), &carry);
+            self.or[start+i].input(&self.g[i].output(), &self.and[start+i].output());
+            // ci+1
+            carry = self.or[start+i].output()
+        }
+        return carry;
+    }
+}
+
+impl Component for LookAheadCarryAdderN {
+    fn get_pin_count(&self) -> (usize, usize) {
+        (2 * self.n_way + 1, self.n_way + 1)
+    }
+    fn set_pin_input(&mut self, position: usize, value: &Potential) {
+        assert!(
+            position < self.get_pin_count().0,
+            "position must be less than {}",
+            self.get_pin_count().0
+        );
+        self.input[position].input(value);
+    }
+    fn get_pin_output(&self, position: usize) -> Potential {
+        assert!(
+            position < self.get_pin_count().1,
+            "position must be less than {}",
+            self.get_pin_count().1
+        );
+        self.output[position].output()
+    }
+
+    fn update_state(&mut self) {
+        // c0
+        let mut ci = self.input[0].output();
+        for i in 0..self.n_way {
+            // pi = ai xor bi
+            self.p[i].input(&self.input[i+1].output(), &self.input[i +1 + self.n_way].output());
+            // gi = ai and bi
+            self.g[i].input(&self.input[i+1].output(), &self.input[i+ 1 + self.n_way].output());
+            // si = pi xor ci
+            self.s[i].input(&self.p[i].output(), &ci);
+            // set output
+            self.output[i].input(&self.s[i].output());
+            // get ci+1
+            ci = self.get_carry(i+1);
+        }
+        self.output[self.n_way].input( &ci);
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -254,6 +379,13 @@ mod tests {
         let adder_4 = RippleCarryAdderN::new(4);
         assert_eq!(adder_4.output(), vec![false, false, false, false, false]);
     }
+
+    #[test]
+    fn test_look_ahead_carry_adder_default() {
+        let adder_4 = LookAheadCarryAdderN::new(4);
+        assert_eq!(adder_4.output(), vec![false, false, false, false, false]);
+    }
+
 
     #[rstest]
     #[case(false, false, false, false)]
@@ -309,6 +441,26 @@ mod tests {
     #[case("1 11 11", "11 1")]
     fn test_ripple_carry_adder_input(#[case] input: String, #[case] output: String) {
         let mut adder_2 = RippleCarryAdderN::new(2);
+        let i: Potentials = Potentials::from_little_endian(&input, false);
+        adder_2.input(&i.get_data(true));
+        let o = Potentials::from_little_endian(&output, false);
+        assert_eq!(adder_2.output(), o.get_data(true));
+    }
+
+    #[rstest]
+    /// carry | a | b  => sum | carry
+    #[case("0 00 00", "00 0")]
+    #[case("0 10 00", "10 0")]
+    #[case("0 10 10", "01 0")]
+    #[case("0 11 10", "00 1")]
+    #[case("0 11 11", "01 1")]
+    #[case("1 00 00", "10 0")]
+    #[case("1 10 00", "01 0")]
+    #[case("1 10 10", "11 0")]
+    #[case("1 11 10", "10 1")]
+    #[case("1 11 11", "11 1")]
+    fn test_look_ahead_carry_adder_input(#[case] input: String, #[case] output: String) {
+        let mut adder_2 = LookAheadCarryAdderN::new(2);
         let i: Potentials = Potentials::from_little_endian(&input, false);
         adder_2.input(&i.get_data(true));
         let o = Potentials::from_little_endian(&output, false);
