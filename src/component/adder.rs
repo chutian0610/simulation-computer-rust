@@ -163,14 +163,14 @@ impl Component for FullAdder {
 ///  4: "carry"
 /// ```
 #[derive(Debug, Clone)]
-struct RippleCarryAdder {
+struct RippleCarryAdderN {
     n_way: usize,
     input: Vec<Wire>,
     full_adders: Vec<FullAdder>,
     output: Vec<Wire>,
 }
 
-impl RippleCarryAdder {
+impl RippleCarryAdderN {
     fn new(n_way: usize) -> Self {
         Self {
             n_way,
@@ -181,7 +181,7 @@ impl RippleCarryAdder {
     }
 }
 
-impl Component for RippleCarryAdder {
+impl Component for RippleCarryAdderN {
     fn get_pin_count(&self) -> (usize, usize) {
         (2 * self.n_way + 1, self.n_way + 1)
     }
@@ -251,7 +251,7 @@ mod tests {
 
     #[test]
     fn test_ripple_carry_adder_default() {
-        let adder_4 = RippleCarryAdder::new(4);
+        let adder_4 = RippleCarryAdderN::new(4);
         assert_eq!(adder_4.output(), vec![false, false, false, false, false]);
     }
 
@@ -308,7 +308,7 @@ mod tests {
     #[case("1 11 10", "10 1")]
     #[case("1 11 11", "11 1")]
     fn test_ripple_carry_adder_input(#[case] input: String, #[case] output: String) {
-        let mut adder_2 = RippleCarryAdder::new(2);
+        let mut adder_2 = RippleCarryAdderN::new(2);
         let i: Potentials = Potentials::from_little_endian(&input, false);
         adder_2.input(&i.get_data(true));
         let o = Potentials::from_little_endian(&output, false);

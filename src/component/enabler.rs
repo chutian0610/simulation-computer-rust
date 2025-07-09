@@ -25,14 +25,14 @@ use crate::{
 /// if the switcher is high, the output is the input.
 /// if the switcher is low, the output is low.
 #[derive(Debug, Default, Clone)]
-struct Enabler {
+struct EnablerN {
     n_way: usize,
     input: Vec<Wire>,
     and_gates: Vec<ANDGate>,
     output: Vec<Wire>,
 }
 
-impl Enabler {
+impl EnablerN {
     pub fn new(n_way: usize) -> Self {
         Self {
             n_way,
@@ -43,7 +43,7 @@ impl Enabler {
     }
 }
 
-impl Component for Enabler {
+impl Component for EnablerN {
     fn get_pin_count(&self) -> (usize, usize) {
         (self.n_way + 1, self.n_way)
     }
@@ -79,19 +79,19 @@ mod tests {
 
     #[test]
     fn test_enable_default() {
-        let enabler = Enabler::new(4);
+        let enabler = EnablerN::new(4);
         assert_eq!(enabler.output(), vec![false, false, false, false]);
     }
     #[test]
     fn test_enable_on() {
-        let mut enabler = Enabler::new(4);
+        let mut enabler = EnablerN::new(4);
         enabler.input(&vec![true, false, false, true, true]);
         assert_eq!(enabler.output(), vec![true, false, false, true]);
     }
 
     #[test]
     fn test_enable_off() {
-        let mut enabler = Enabler::new(4);
+        let mut enabler = EnablerN::new(4);
         enabler.input(&vec![true, false, false, true, false]);
         assert_eq!(enabler.output(), vec![false, false, false, false]);
     }
