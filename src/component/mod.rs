@@ -4,9 +4,10 @@ use crate::circuit::Potential;
 
 pub mod adder;
 pub mod big_gates;
-pub mod enabler;
 pub mod decoder;
+pub mod enabler;
 pub mod encoder;
+pub mod mux;
 
 /// A trait representing a component with input and output pins.
 pub trait Component {

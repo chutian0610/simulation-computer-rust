@@ -4,10 +4,10 @@ use crate::{
 };
 
 /// 2-1 Simple Encoder.
-/// 
+///
 /// # description
 /// [Simple Encoder](https://en.wikipedia.org/wiki/Encoder_(digital)) convert 2 bits to 1 bit.
-/// 
+///
 /// # truth table
 /// | I0 | I1 | OUT |
 /// |---|---|---|
@@ -46,10 +46,10 @@ impl Component for Encoder2_1 {
 }
 
 /// 4-2 Simple Encoder.
-/// 
+///
 /// # description
 /// [Simple Encoder](https://en.wikipedia.org/wiki/Encoder_(digital)) convert 4 bits to 2 bit.
-/// 
+///
 /// # truth table
 /// | I0 | I1 | I2 | I3 | OUT0 | OUT1 |
 /// |---|---|---|---|---|---|

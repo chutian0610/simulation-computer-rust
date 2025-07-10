@@ -298,7 +298,7 @@ impl LookAheadCarryAdderN {
         if index == 0 {
             return self.input[0].output();
         }
-        return self.get_carry_recursion(index, index*(index-1)/2);
+        return self.get_carry_recursion(index, index * (index - 1) / 2);
     }
 
     fn get_carry_recursion(&mut self, index: usize, start: usize) -> Potential {
@@ -308,10 +308,10 @@ impl LookAheadCarryAdderN {
         // ci+1 = gi and (pi or ci)
         // ci will use i andGate + i orGate. the total usage is i*(i-1)/2
         for i in 0..index {
-            self.and[start+i].input(&self.p[i].output(), &carry);
-            self.or[start+i].input(&self.g[i].output(), &self.and[start+i].output());
+            self.and[start + i].input(&self.p[i].output(), &carry);
+            self.or[start + i].input(&self.g[i].output(), &self.and[start + i].output());
             // ci+1
-            carry = self.or[start+i].output()
+            carry = self.or[start + i].output()
         }
         return carry;
     }
@@ -343,17 +343,23 @@ impl Component for LookAheadCarryAdderN {
         let mut ci = self.input[0].output();
         for i in 0..self.n_way {
             // pi = ai xor bi
-            self.p[i].input(&self.input[i+1].output(), &self.input[i +1 + self.n_way].output());
+            self.p[i].input(
+                &self.input[i + 1].output(),
+                &self.input[i + 1 + self.n_way].output(),
+            );
             // gi = ai and bi
-            self.g[i].input(&self.input[i+1].output(), &self.input[i+ 1 + self.n_way].output());
+            self.g[i].input(
+                &self.input[i + 1].output(),
+                &self.input[i + 1 + self.n_way].output(),
+            );
             // si = pi xor ci
             self.s[i].input(&self.p[i].output(), &ci);
             // set output
             self.output[i].input(&self.s[i].output());
             // get ci+1
-            ci = self.get_carry(i+1);
+            ci = self.get_carry(i + 1);
         }
-        self.output[self.n_way].input( &ci);
+        self.output[self.n_way].input(&ci);
     }
 }
 
@@ -385,7 +391,6 @@ mod tests {
         let adder_4 = LookAheadCarryAdderN::new(4);
         assert_eq!(adder_4.output(), vec![false, false, false, false, false]);
     }
-
 
     #[rstest]
     #[case(false, false, false, false)]
